@@ -157,3 +157,147 @@ Object after function: Samuel Clemens
     - calls `String::from()`
   - `format!()`
     - calls `Display::fmt`
+
+## Day 7
+
+**Style**
+
+- variables, functions, modules in snake case `time_in_millis`
+- structs are pascal `CpuModel`
+- globals upper snake: `GLOBAL_TIMEOUT`
+- unabmbiguous parenthesis optional
+
+```rust
+if x > y { /* */ }
+
+while x > y { /* */ }
+```
+
+**Expressions**
+
+- almost everything an expression, has return value
+
+```rust
+fn main() {
+    let apples = 6;
+    let message = if apples > 10 {
+        "Lots of apples"
+    } else if apples > 4 {
+        "A few apples"
+    } else {
+        "Not many apples at all"
+    };
+
+    println!("{}", message) // prints "A few apples"
+}
+```
+
+**Unit type**
+
+- no `null` or `undefined` types
+- `()` represents no value, unit type
+
+**Implicit returns**
+
+- last line used as return value in function if no semi-colon
+- `return` often absent
+
+```rust
+fn add_numbers(left: i64, right: i64) -> i64 {
+    left + right  // ⬅ Notice no semi-colon
+}
+```
+
+**Arrays**
+
+- rust array `[]` are immutable and must have known size
+- `Vec` is mutable array at end
+- `VecDeque` is mutable array at both ends
+  - 'vec-deck'
+  - 'deque' = double-ended queue
+
+```rust
+let mut numbers = vec![1, 2, 3, 4, 5];  // ⬅ Notice the vec! macro
+numbers.push(7);
+println!("{:?}", numbers);
+```
+
+## Day 8
+
+**HashMap**
+
+- hashmap returns `Option` enum since no `null` / `undefined`
+  - values are `Some` and `None`
+  - can test with `.is_some()` and `.is_none()`
+  - can unwrap unsafely with `.unwrap()`
+  - can unwrap safely wtih `.unwrap_or_()`
+
+```rust
+use std::collections::HashMap;
+
+fn main() {
+  let mut map = HashMap::new();
+  map.insert("key1", "value1");
+  map.insert("key2", "value2");
+
+  println!("{}", map.get("key1").unwrap_or(&""));
+  println!("{}", map.get("key2").unwrap_or(&""));
+}
+
+```
+
+- returns borrowed value
+  - if already `&str` then returns `&&str`
+
+**Structs**
+
+- define objects as structs
+
+```rust
+struct TrafficLight {
+  color: String,
+}
+
+let light = TrafficLight {
+  color: "red".to_owned(), // Note we want an owned String
+};
+```
+
+- use `impl` to add behavior
+
+```rust
+impl TrafficLight {
+  pub fn new() -> Self {
+    Self {
+      color: "red".to_owned(),
+    }
+  }
+}
+
+fn main() {
+  let light = TrafficLight::new();
+}
+```
+
+- can add trait to support printing values
+
+```rust
+impl std::fmt::Display for TrafficLight {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "Traffic light is {}", self.color)
+  }
+}
+```
+
+- can derive implementation of trait if all impement specified trait
+
+```rust
+#[derive(Debug)]
+struct TrafficLight {
+  color: String,
+}
+```
+
+## More Learning
+
+- [Rust Book](https://doc.rust-lang.org/stable/book/)
