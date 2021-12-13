@@ -298,6 +298,122 @@ struct TrafficLight {
 }
 ```
 
+## Day 9
+
+- static function on struct
+
+```rust
+impl TrafficLight {
+  pub fn new() -> Self {
+    Self {
+      color: "red".to_owned(),
+    }
+  }
+}
+// let light = TrafficLight::new()
+```
+
+- methods are private by default
+  - need `self` or `&self` as first argument to be public
+- using `self` gives up ownership of values after first call. useful for:
+  - conversions
+  - cleanup code
+  - builder patterns
+
+```rust
+pub fn get_state(&self) -> &String {
+  &self.color
+}
+```
+
+- mutate state with `&mut self` param
+
+```rust
+pub fn turn_green(&mut self) {
+  self.color = "green".to_owned()
+}
+
+let mut light = TrafficLight::new();
+```
+
+**Enums**
+
+```rust
+enum TrafficLightColor {
+  Red,
+  Yellow,
+  Green,
+}
+```
+
+- add `#[derive(Debug)]` to enable debug
+- implement display using `match` expression
+
+```rust
+impl Display for TrafficLightColor {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let color_string = match self {
+      TrafficLightColor::Green => "green",
+      TrafficLightColor::Red => "red",
+      TrafficLightColor::Yellow => "yellow",
+    };
+    write!(f, "{}", color_string)
+  }
+}
+```
+
+- `write!` is macro used like `print!` for display
+
+## Day 10
+
+- traits define methods
+  - can have body for default implementation
+- implement `trait` via `impl [trait] for [struct]` format
+
+```rust
+trait Light {
+  fn get_name(&self) -> &str;
+}
+
+impl Light for HouseLight {
+  fn get_name(&self) -> &str {
+    "House light"
+  }
+}
+```
+
+- use `dyn [trait]` when rust cant know value's type at compile time
+  - loses type information
+
+```rust
+trait Light {
+  fn get_name(&self) -> &str;
+  fn get_state(&self) -> &dyn std::fmt::Debug;
+}
+
+impl Light for HouseLight {
+  fn get_name(&self) -> &str {
+    "House light"
+  }
+
+  fn get_state(&self) -> &dyn std::fmt::Debug {
+    &self.on
+  }
+}
+
+impl Light for TrafficLight {
+  fn get_name(&self) -> &str {
+    "Traffic light"
+  }
+
+  fn get_state(&self) -> &dyn std::fmt::Debug {
+    &self.color
+  }
+}
+```
+
+- `dyn [trait]` are unsized. `&dyn [trait]` are sized
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
