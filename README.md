@@ -414,6 +414,72 @@ impl Light for TrafficLight {
 
 - `dyn [trait]` are unsized. `&dyn [trait]` are sized
 
+## Day 11
+
+**Import files**
+
+- rust imports via modules, not file names
+- create modules with `mod my_module;` format
+  - does not need to be in file named after it
+
+**Import functions**
+
+- two main styles, direct and via `use`
+- use `{}` to import multiple
+- use `super` to import from parent
+- use `crate` to import starting from crate root
+
+```rust
+// import direct
+some_module::some_function();
+
+// import use
+use some_module::some_function;
+some_function()
+
+// import multiple
+use std::io::{Read, Write};
+
+// super
+fn work() {}
+
+mod test {
+	use super::work;
+}
+
+// crate
+use crate::some_module::some_function
+```
+
+**Rust module system**
+
+- rust project is crate
+- crate root is entrypoint, usually `main.rs` or `lib.rs`
+- rust file lookup order
+  - if import is `one::two::three` looks for `./one/two/three.rs` or `./one/two/three/mod.rs`
+    - `mod.rs` not recommended anymore
+
+**Visibility**
+
+- private by default except enums and traits
+- visibility up and out
+  - deeper definitions not seen unless changed
+- use `pub` to make visible
+- pub modifiers
+  - `pub(crate)` for within crate visibility
+  - `pub(super)` for parent module only
+
+## Day 12
+
+- generic function accept `toString`
+
+```rust
+fn needs_string<T: ToString>(almost_string: T) {
+  let real_string = almost_string.to_string();
+  println!("{}", real_string);
+}
+```
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
