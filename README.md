@@ -480,6 +480,114 @@ fn needs_string<T: ToString>(almost_string: T) {
 }
 ```
 
+## Day 13
+
+**Enums**
+
+- option returns `Some` or `None`
+
+```rust
+pub enum Option<T> {
+    /// No value
+    None,
+    /// Some value `T`
+    Some(T),
+}
+```
+
+- result returns `Ok` or `Err`
+
+```rust
+pub enum Result<T, E> {
+  Ok(T),
+  Err(E),
+}
+```
+
+**Getting the value**
+
+- `.unwrap()`
+  - only use when sure of `Some` or `Ok`, otherwise code will panic / crash
+
+```rust
+let ip_address = std::net::Ipv4Addr::from_str("127.0.0.1").unwrap();
+```
+
+- `.unwrap_or()`
+  - use to give default value in case of failure
+
+```rust
+let default_string = "Default value".to_owned();
+
+let unwrap_or = returns_none().unwrap_or(default_string);
+
+println!("returns_none().unwrap_or(...): {:?}", unwrap_or);
+```
+
+- `.unwrap_or_else()`
+  - like `.unwrap_or()` but takes function
+  - `|| ...` is rust closure syntax
+
+```rust
+let unwrap_or_else = returns_none()
+  .unwrap_or_else(|| format!("Default value from a function at time {:?}", Instant::now()));
+
+println!(
+  "returns_none().unwrap_or_else(|| {{...}}): {:?}",
+  unwrap_or_else
+);
+```
+
+- `.unwrap_or_default()`
+  - defer to types default
+
+```rust
+let my_string = maybe_none.unwrap_or_default(); // Assuming `T` is `String`.
+```
+
+- `match`
+  - match enum variants and return value
+
+```rust
+let match_value = match returns_some() {
+  Some(val) => val,
+  None => "My default value".to_owned(),
+};
+
+println!("match {{...}}: {:?}", match_value);
+```
+
+- `if let`
+  - enter a block conditionally
+
+```rust
+if let Some(val) = returns_some() {
+  println!("if let : {:?}", val);
+}
+```
+
+- `?` unwrapping
+  - use `?` at end of statement to unwrap and exit early on error
+
+```rust
+use std::fs::read_to_string;
+
+fn main() -> Result<(), std::io::Error> {
+  let html = render_markdown("./README.md")?;
+  println!("{}", html);
+  Ok(())
+}
+
+fn render_markdown(file: &str) -> Result<String, std::io::Error> {
+  let source = read_to_string(file)?;
+  Ok(markdown::to_html(&source))
+}
+```
+
+- if `read_to_string()` results in error
+  - returns error immediately to `main`
+  - `render_markdown()` returns error immediately, since top level causes crash
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
