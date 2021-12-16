@@ -588,6 +588,143 @@ fn render_markdown(file: &str) -> Result<String, std::io::Error> {
   - returns error immediately to `main`
   - `render_markdown()` returns error immediately, since top level causes crash
 
+## Day 14
+
+**Error handling with Box**
+
+- `dyn [trait]` has no type, rust can't know size so errors
+- `Box<dyn Error>` allows to place a value _somewhere_ and have a reference to it
+- **Use sparingly**: Result doesn't constrain error's type and will have issues when error doesn't implement `Error`
+
+```rust
+use std::{error::Error, fs::read_to_string};
+
+fn main() -> Result<(), Box<dyn Error>> {
+  let html = render_markdown()?;
+  println!("{}", html);
+  Ok(())
+}
+
+fn render_markdown() -> Result<String, Box<dyn Error>> {
+  let file = std::env::var("MARKDOWN")?;
+  let source = read_to_string(file)?;
+  Ok(markdown::to_html(&source))
+}
+```
+
+**Error handling with custom error type**
+
+- errors can be structs or enums
+- need to implement `Debug` and `Display`
+- may need to implement `From`, `Into`, `TryFrom`, `TryInto` for conversion
+
+```rust
+use std::fs::read_to_string;
+
+fn main() -> Result<(), MyError> {
+  let html = render_markdown()?;
+  println!("{}", html);
+  Ok(())
+}
+
+fn render_markdown() -> Result<String, MyError> {
+  let file = std::env::var("MARKDOWN")?;
+  let source = read_to_string(file)?;
+  Ok(markdown::to_html(&source))
+}
+
+#[derive(Debug)]
+enum MyError {
+  EnvironmentVariableNotFound,
+  IOError(std::io::Error),
+}
+
+impl From<std::env::VarError> for MyError {
+  fn from(_: std::env::VarError) -> Self {
+    Self::EnvironmentVariableNotFound
+  }
+}
+
+impl From<std::io::Error> for MyError {
+  fn from(value: std::io::Error) -> Self {
+    Self::IOError(value)
+  }
+}
+
+impl std::error::Error for MyError {}
+
+impl std::fmt::Display for MyError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      MyError::EnvironmentVariableNotFound => write!(f, "Environment variable not found"),
+      MyError::IOError(err) => write!(f, "IO Error: {}", err.to_string()),
+    }
+  }
+}
+```
+
+**Crate for error handling**
+
+- [thiserror](https://docs.rs/thiserror/latest/thiserror/) gives custom error solution with less boilerplate
+
+```rust
+use std::fs::read_to_string;
+
+fn main() -> Result<(), MyError> {
+  let html = render_markdown()?;
+  println!("{}", html);
+  Ok(())
+}
+
+fn render_markdown() -> Result<String, MyError> {
+  let file = std::env::var("MARKDOWN")?;
+  let source = read_to_string(file)?;
+  Ok(markdown::to_html(&source))
+}
+
+#[derive(thiserror::Error, Debug)]
+enum MyError {
+  #[error("Environment variable not found")]
+  EnvironmentVariableNotFound(#[from] std::env::VarError),
+  #[error(transparent)]
+  IOError(#[from] std::io::Error),
+}
+```
+
+- [errorchain](https://docs.rs/error-chain/0.12.4/error_chain/index.html) gives `Error` struct, `ErrorKind` enum, and custom `Result` type aliased
+
+```rust
+use std::fs::read_to_string;
+
+error_chain::error_chain! {
+  foreign_links {
+    EnvironmentVariableNotFound(::std::env::VarError);
+    IOError(::std::io::Error);
+  }
+}
+
+fn main() -> Result<()> {
+  let html = render_markdown()?;
+  println!("{}", html);
+  Ok(())
+}
+
+fn render_markdown() -> Result<String> {
+  let file = std::env::var("MARKDOWN")?;
+  let source = read_to_string(file)?;
+  Ok(markdown::to_html(&source))
+}
+```
+
+- [anyhow](https://github.com/dtolnay/anyhow) for simple error handling for basic / personal applications when you don't care to give caller all the info they need on the error
+
+**Other crates**
+
+- [snafu](https://docs.rs/snafu/0.6.10/snafu/index.html)
+- [quick-error](https://docs.rs/quick-error/latest/quick_error/)
+- [failure](https://docs.rs/failure/latest/failure/)
+- [err-derive](https://docs.rs/err-derive/0.3.0/err_derive/)
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
