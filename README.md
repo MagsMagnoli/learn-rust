@@ -725,6 +725,106 @@ fn render_markdown() -> Result<String> {
 - [failure](https://docs.rs/failure/latest/failure/)
 - [err-derive](https://docs.rs/err-derive/0.3.0/err_derive/)
 
+## Day 15
+
+- rust closures use pipes for arguments with no separator between arguments and body
+
+```rust
+let closure = || {
+  println!("Hi! I'm in a closure");
+};
+closure();
+```
+
+- shorthand closure omits braces
+
+```rust
+let double = |num: i64| num + num;
+let num = 4;
+println!("{} + {} = {}", num, num, double(num));
+```
+
+- closures must be marked mutable to update state
+
+```rust
+let mut counter = 0;
+
+let mut closure = || {
+  counter += 1;
+  println!(
+    "This closure has a counter. I've been run {} times.",
+    counter
+  );
+};
+closure();
+closure();
+closure();
+println!("The closure was called a total of {} times", counter);
+```
+
+- returning closures
+  -function flavors
+  - `Fn` - immutably borrows any variables
+  - `FnMut` - mutably borrows any variables
+  - `FnOnce` - consumes its values, can only be run once
+- `move` keyword indicates ownership of any variables referenced
+
+```rust
+fn make_adder(left: i32) -> impl Fn(i32) -> i32 {
+  move |right: i32| {
+    println!("{} + {} is {}", left, right, left + right);
+    left + right
+  }
+}
+
+let plus_two = make_adder(2);
+plus_two(23);
+```
+
+- function composition
+
+```rust
+fn compose<T>(f: impl Fn(T) -> T, g: impl Fn(T) -> T) -> impl Fn(T) -> T {
+  move |i: T| f(g(i))
+}
+
+let plus_two = make_adder(2);  // ← make_adder from above
+let times_two = |i: i32| i * 2;
+let double_plus_two = compose(plus_two, times_two);
+println!("{} * 2 + 2 = {}", 10, double_plus_two(10));
+```
+
+- regular function references
+
+```rust
+fn regular_function() {
+  println!("I'm a regular function");
+}
+
+let fn_ref = regular_function;
+fn_ref();
+```
+
+- closures in structs
+
+```rust
+struct DynamicBehavior<T> {
+  closure: Box<dyn Fn(T) -> T>,
+}
+
+impl<T> DynamicBehavior<T> {
+  fn new(closure: Box<dyn Fn(T) -> T>) -> Self {
+    Self { closure }
+  }
+  fn run(&self, arg: T) -> T {
+    (self.closure)(arg)
+  }
+}
+
+let square = DynamicBehavior::new(Box::new(|num: i64| num * num));
+println!("{} squared is {}", 5, square.run(5))
+```
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
