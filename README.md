@@ -825,6 +825,48 @@ let square = DynamicBehavior::new(Box::new(|num: i64| num * num));
 println!("{} squared is {}", 5, square.run(5))
 ```
 
+## Day 16: Lifetimes, references, and 'static'
+
+- lifetime: every value has point of created and point of dropped
+- lifetime annotation: syntax to add to give lifetime a named tag. needed to disambiguate
+- all references have lifetimes and implicit annotations even if not written explicitly
+
+```rust
+fn omits_annotations(list: &[String]) -> Option<&String> {
+  list.get(0)
+}
+
+fn has_annotations<'a>(list: &'a [String]) -> Option<&'a String> {
+  list.get(1)
+}
+```
+
+- static lifetime usually used
+  - as explicit lifetime annotation
+  - as lifetime bounds on generic type
+
+```rust
+fn main() {
+  let mark_twain = "Samuel Clemens";
+  print_author(mark_twain);
+}
+fn print_author(author: &'static str) {
+  println!("{}", author);
+}
+
+fn print<T: Display + 'static>(message: &T) {
+  println!("{}", message);
+}
+```
+
+- `&'static` means reference valid for rest of program. wont move or change
+  - string literals are `&'static`
+  - says nothing about lifetime
+  - if you need to add `&'static` to make things work, rethink
+  - if you need to add `'static` bound it's likely ok
+  
+
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
