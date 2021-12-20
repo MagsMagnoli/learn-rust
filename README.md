@@ -864,8 +864,256 @@ fn print<T: Display + 'static>(message: &T) {
   - says nothing about lifetime
   - if you need to add `&'static` to make things work, rethink
   - if you need to add `'static` bound it's likely ok
-  
 
+## Day 17: Arrays, Loops, and Iterators
+
+- arrays via `[]` cannot change size
+- use `vec![]` for array that can grow at end
+
+**Loops**
+
+- no standard `for (...; ...; ...;)` syntax
+- create loops via `for i in (range)` where `i` is nameable var and `(range)` is a range like `0..10`
+- cannot iterate object keys automatically. can use `.keys()` on HashMap to get an iterator
+- can use `for...in` on arrays
+
+**while (!done)**
+
+- can use `while let` syntax to loop until some condition is false
+
+```rust
+struct Worker {
+  data: Vec<&'static str>,
+}
+impl Worker {
+  fn doWork(&mut self) -> Option<&'static str> {
+    self.data.pop()
+  }
+}
+let mut obj = Worker {
+  data: vec!["a", "b", "c"],
+};
+
+while let Some(data) = obj.doWork() {
+  println!("{}", data);
+}
+```
+
+- no `do...while`
+- `loop` expression to loop forever like `while (true)`. exit with `break`
+
+```rust
+let mut n = 0;
+loop {
+  n += 1;
+  if n > 3 {
+    break;
+  }
+}
+println!("Finished. n={}", n);
+```
+
+**Labels**
+
+- labels must begin with `'`
+
+```rust
+'outer: loop {
+  loop {
+    break 'outer;
+  }
+}
+```
+
+**Break and Loop expressions**
+
+- can set value with break in a loop
+
+```rust
+let value = loop {
+  if true {
+    break "A";
+  } else {
+    break "B";
+  }
+};
+println!("Loop value is: {}", value);
+```
+
+**Iterators**
+
+- rust iterators are lazy
+- has `Item` type as placeholder for items in interation
+- call `.iter()` to get and use iterator on `Vec`
+- call `.collect()` to consume iterator
+
+```rust
+let list = vec![1, 2, 3];
+let doubled: Vec<_> = list
+  .iter()
+  .map(|num| num * 2)
+  .collect();
+println!("{:?}", doubled);
+```
+
+- gotcha: `type annotations needed`
+
+  - rust knows types in iterator but needs to know output type
+  - `Vec<_>` tells rust to output a `Vec` with known types in iterator
+
+- use `iter_mut` to mutably borrow elements
+
+`.filter()`
+
+- use `*` to dereference double reference created by `.iter()` and `.filter()`
+
+```rust
+let numbers = [1, 2, 3, 4, 5];
+let even: Vec<_> = numbers.iter().filter(|x| *x % 2 == 0).collect();
+println!("{:?}", even);
+```
+
+`.find()`
+
+- can store iterator and call `.find()` multiple times
+
+```rust
+let numbers = [1, 2, 3, 4, 5];
+let first_even = numbers.iter().find(|x| *x % 2 == 0);
+println!("{:?}", first_even.unwrap());
+```
+
+`.forEach()`
+
+- consumes iterator immediately
+
+```rust
+let numbers = [1, 2, 3];
+numbers.iter().for_each(|x| println!("{}", x));
+```
+
+`.join()`
+
+```rust
+let names = ["Sam", "Janet", "Hunter"];
+let csv = names.join(", ");
+println!("{}", csv);
+```
+
+`.map()`
+
+```rust
+let list = vec![1, 2, 3];
+let doubled: Vec<_> = list.iter().map(|num| num * 2).collect();
+println!("{:?}", doubled)
+```
+
+`.push()` and `.pop()`
+
+- only available on `Vec` types, not regular arrays
+- become `.push_back()` and `.pop_back()` on `VecDeque`
+
+```rust
+let mut list = vec![1, 2];
+list.push(3);
+println!("{:?}", list.pop());
+```
+
+`.shift()` and `.unshift()`
+
+- need `VecDeque` to push/pop from front
+
+```rust
+let mut list = VecDeque::from([1, 2]);
+list.push_front(0);
+println!("{:?}", list.pop_front());
+```
+
+**Returning iterators**
+
+- best practice to return iterator rather than final type
+  - maintains lazy nature
+  - allows for easy chaining
+
+```rust
+struct Names {
+  names: Vec<String>,
+}
+
+impl Names {
+  fn search<T: AsRef<str>>(&self, re: T) -> impl Iterator<Item = &String> {
+    let regex = regex::Regex::new(re.as_ref()).unwrap();
+    self.names.iter().filter(move |name| regex.is_match(name))
+  }
+}
+```
+
+## Day 18: Async
+
+- rust gives async tasks via `Future` and `await` but no executor and reactor to notify when futures are done
+
+**Rust Async Libraries**
+
+- [Tokio](https://crates.io/crates/tokio)
+- [Async-std](https://crates.io/crates/async-std)
+- [Smol](https://crates.io/crates/smol)
+
+**Using Tokio**
+
+- add dependency with `full` feature flag
+
+```rust
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+```
+
+- must start executor before futures
+
+```rust
+#[tokio::main]
+async fn main()  { // Notice we write async main() now
+}
+```
+
+- `async` turns function return value from `T` to `impl Future<Output = T>`
+- `await` must be appended to future
+- **futures don't run until awaited**
+
+```rust
+#[tokio::main]
+async fn main() {
+    let msg = async_fn().await;
+}
+```
+
+- can create async closures by returning async blocks
+
+```rust
+#[tokio::main]
+async fn main() {
+    let msg = "Hello world".to_owned();
+
+    let closure = || async {
+        println!("{}", msg);
+    };
+    closure().await;
+}
+```
+
+**Send and Sync**
+
+- `Send` and `Sync` determine if can be sent or accessed across threads safely
+- can add via `+ Send` and `+ Sync`
+- can add with `'static` to let rust know parameter can last forever
+
+```rust
+fn async_print<T: Display + Send + 'static>(msg: T) -> JoinHandle<()> {
+    tokio::task::spawn(async move {
+        println!("{}", msg);
+    })
+}
+
+```
 
 ## More Learning
 
