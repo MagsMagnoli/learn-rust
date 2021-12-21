@@ -1112,7 +1112,75 @@ fn async_print<T: Display + Send + 'static>(msg: T) -> JoinHandle<()> {
         println!("{}", msg);
     })
 }
+```
 
+## Day 19 - Starting a Large Project
+
+- tip: set up rust project with workspaces from the get-go
+- create library with `cargo new --lib crates/my-lib`
+  - libraries use `lib.rs` and have `Cargo.lock` and `.gitignore` added
+  - unit tests built in, included in source files
+
+**Unit tests**
+
+- `[#cfg()]` for conditional compilation. `#[cfg(test)]` for test flag
+- `[#test]` marks function as unit test for rust test harness to run and report result
+- basic asserts `assert!()`, `assert_eq!()`, and `assert_ne!()`
+- `use super::*` in test module allows importing parent module without prefixes
+
+## Day 20 - CLI Arguments and Logging
+
+**Logging**
+
+- use `log` crate for logging
+- use `env_logger` crate for quick STDOUT
+- decoupling logging with output allows output to be handled by user or product
+
+```rust
+[dependencies]
+log = "0.4"
+env_logger = "0.9"
+```
+
+- `log` gives `trace!()`, `debug!()`, `warn!()`, `info!()`, and `error!()` macros
+- init `env_logger` via `env_logger::init();` and set output contraints via `RUST_LOG` env var
+  - outputs nothing by default
+  - can use `[package]=[level]` syntax to filter per module
+
+**CLI Arguments**
+
+- use `structopt` for CL args
+
+```rust
+[dependencies]
+structopt = "0.3"
+```
+
+- `structopt` uses struct that derives `StructOpt` trait
+- both global and per arg configuration
+
+```rust
+use structopt::StructOpt;
+
+#[derive(StructOpt)]
+#[structopt(
+    name = "wasm-runner",
+    about = "Sample project from https://vino.dev/blog/node-to-rust-day-1-rustup/",
+    global_settings(&[
+      AppSettings::ColoredHelp
+    ]),
+)]
+struct CliOptions {
+    /// The WebAssembly file to load.
+    #[structopt(parse(from_os_str))]
+    pub(crate) file_path: PathBuf,
+}
+```
+
+- `StructOpt` trait adds `from_args` function to struct
+
+```rust
+let options = CliOptions::from_args();
 ```
 
 ## More Learning
