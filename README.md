@@ -1183,7 +1183,7 @@ struct CliOptions {
 let options = CliOptions::from_args();
 ```
 
-## Day 22: Building and Running WebAssembly
+## Day 21: Building and Running WebAssembly
 
 - web assembly runs on its own
 - [Web Assembly System Interface](https://wasi.dev/) (WASI)
@@ -1271,7 +1271,70 @@ mod tests {
 }
 ```
 
-## Day 22: Handling JSON
+## Day 22: Using JSON
+
+- [serde](https://serde.rs/) crate gives `Serialization` and `Deserialization` traits
+- can use `derive` feature to auto serialize most things automatically
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Author {
+    first: String,
+    last: String,
+}
+```
+
+- serialize / deserialize json and messagepack examples
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Author {
+    first: String,
+    last: String,
+}
+
+fn main() {
+    let mark_twain = Author {
+        first: "Samuel".to_owned(),
+        last: "Clemens".to_owned(),
+    };
+
+    let serialized_json = serde_json::to_string(&mark_twain).unwrap();
+    println!("Serialized as JSON: {}", serialized_json);
+    let serialized_mp = rmp_serde::to_vec(&mark_twain).unwrap();
+    println!("Serialized as MessagePack: {:?}", serialized_mp);
+
+    let deserialized_json: Author = serde_json::from_str(&serialized_json).unwrap();
+    println!("Deserialized from JSON: {:?}", deserialized_json);
+    let deserialized_mp: Author = rmp_serde::from_read_ref(&serialized_mp).unwrap();
+    println!("Deserialized from MessagePack: {:?}", deserialized_mp);
+}
+```
+
+- use `serde_json::Value` for intermediary json
+
+```rust
+fn run(options: CliOptions) -> anyhow::Result<serde_json::Value> {
+    let module = Module::from_file(&options.file_path)?;
+    info!("Module loaded");
+
+    let json = fs::read_to_string(options.json_path)?;
+    let data: serde_json::Value = serde_json::from_str(&json)?;
+    debug!("Data: {:?}", data);
+
+    let bytes = rmp_serde::to_vec(&data)?;
+
+    debug!("Running  {} with payload: {:?}", options.operation, bytes);
+    let result = module.run(&options.operation, &bytes)?;
+    let unpacked: serde_json::Value = rmp_serde::from_read_ref(&result)?;
+
+    Ok(unpacked)
+}
+```
 
 ## More Learning
 
