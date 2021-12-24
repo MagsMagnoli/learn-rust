@@ -1183,6 +1183,96 @@ struct CliOptions {
 let options = CliOptions::from_args();
 ```
 
+## Day 22: Building and Running WebAssembly
+
+- web assembly runs on its own
+- [Web Assembly System Interface](https://wasi.dev/) (WASI)
+- WASM only uses numbers
+- [Web Assembly Proceedure Calls](https://wapc.io/) (waPC) defines protocol for communicating in and out of WebAssembly
+  - implementer is host
+  - module is guest
+  - can build in Rust
+
+**Reading Files**
+
+```rust
+pub fn from_file<T: AsRef<Path>>(path: T) -> Result<Self, Error> {
+    debug!("Loading wasm file from {:?}", path.as_ref());
+    let bytes = fs::read(path.as_ref())
+        .map_err(|e| Error::FileNotReadable(path.as_ref().to_path_buf(), e.to_string()))?;
+    Self::new(&bytes)
+}
+```
+
+**waPC and wasmtime-provider crates**
+
+- waPC gives `WapcHost` and `WebAssemblyEngineProvider` traits
+- need to initialize the engine
+- `WapcHost` constructor takes boxed engine and function callback for guest calls to host
+
+```rust
+impl Module {
+  pub fn from_file<T: AsRef<Path>>(path: T) -> Result<Self, Error> {
+      debug!("Loading wasm file from {:?}", path.as_ref());
+      let bytes = fs::read(path.as_ref())
+          .map_err(|e| Error::FileNotReadable(path.as_ref().to_path_buf(), e.to_string()))?;
+      Self::new(&bytes)
+  }
+  pub fn new(bytes: &[u8]) -> Result<Self, Error> {
+    let engine = wasmtime_provider::WasmtimeEngineProvider::new(bytes, None);
+
+    let host = WapcHost::new(Box::new(engine), |_id, binding, ns, operation, payload| {
+        trace!(
+            "Guest called: binding={}, namespace={}, operation={}, payload={:?}",
+            binding,
+            ns,
+            operation,
+            payload
+        );
+        Err("Not implemented".into())
+    })?;
+    Ok(Module { host })
+  }
+}
+
+// custom errors with thiserror
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error(transparent)]
+    WapcError(#[from] wapc::errors::Error),
+    #[error("Could not read file {0}: {1}")]
+    FileNotReadable(PathBuf, String),
+}
+```
+
+**Calling WASM**
+
+- add `rmp-serde` to use in tests
+
+```rust
+pub fn run(&self, operation: &str, payload: &[u8]) -> Result<Vec<u8>, Error> {
+    debug!("Invoking {}", operation);
+    let result = self.host.call(operation, payload)?;
+    Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn runs_operation() -> Result<(), Error> {
+      let module = Module::from_file("./tests/test.wasm")?;
+
+      let bytes = rmp_serde::to_vec("World").unwrap();
+      let payload = module.run("hello", &bytes)?;
+      let unpacked: String = rmp_serde::decode::from_read_ref(&payload).unwrap();
+      assert_eq!(unpacked, "Hello, World.");
+      Ok(())
+  }
+}
+```
+
+## Day 22: Handling JSON
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
