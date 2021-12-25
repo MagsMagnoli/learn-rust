@@ -1336,6 +1336,41 @@ fn run(options: CliOptions) -> anyhow::Result<serde_json::Value> {
 }
 ```
 
+## Day 23: Cheating the Borrow Checker
+
+- `Rc` like a mini garbage collector. Rust cleans up memory when last reference lifetime ends
+  - like a shared `Box`
+  - prevents needing to add `'a` lifetimes that make dependents need to also add lifetimes
+- `Rc` does not work across threads
+  - is `!Send`
+- `Arc` is `Send` version of `Rc`
+  - "Atomically Reference Counted" and handles `Rc` shortcomings at performance cost
+
+**Mutex and RwLock**
+
+- `Arc` is answer for `Send`. `Mutex` and `RwLock` answers for `Sync`
+- `Mutex` (Mutual Exclusion) - object lock for one read / write
+- `RwLock` - many reads but one write
+- [parking_lot](https://docs.rs/parking_lot/latest/parking_lot/index.html) crate promises faster / smaller sync types
+  - don't require managing `Result` (returned by `Mutex` and `RwLock`)
+- own guard value for `Mutex` and `RwLock`. drops via `drop(guard)` or when scope ends
+
+```rust
+fn main() {
+  let treasure = RwLock::new(Treasure { dubloons: 1000 });
+
+  {
+      let mut lock = treasure.write();
+      lock.dubloons = 0;
+      println!("Treasure emptied!");
+  }
+
+  println!("Treasure: {:?}", treasure);
+}
+```
+
+- although possible, avoid passing guards into async functions
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
