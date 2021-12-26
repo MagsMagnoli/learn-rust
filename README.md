@@ -1371,6 +1371,64 @@ fn main() {
 
 - although possible, avoid passing guards into async functions
 
+## Day 24: Crates and Tools
+
+**Data**
+
+- [serde](https://serde.rs/) - data serialization
+- [serde_json](https://docs.serde.rs/serde_json/) - JSON parsing and stringifying
+- [parking_lot](https://docs.rs/parking_lot/latest/parking_lot/index.html) - better Rust `Mutex` and `RwLock`
+- [once_cell](https://docs.rs/once_cell/latest/once_cell/index.html) - for global variables
+
+**Error Handling**
+
+- [thiserror](https://docs.rs/thiserror/latest/thiserror/) - easy custom errors
+- [anyhow](https://docs.rs/anyhow/latest/anyhow/) - easy generic errors
+
+**Logging**
+
+- [log](https://docs.rs/log/latest/log/) - logging fascade abstracting logging usage from implementation
+- [env_logger](https://docs.rs/env_logger/latest/env_logger/) - easy console logging via env var
+- [test-log](https://docs.rs/test-log/latest/test_log/) - `env_logger`-style output in tests without initializing a logger
+- [prett-env-logger](https://github.com/seanmonstar/pretty-env-logger) - `env_logger` but prettier
+- [tracing](https://github.com/tokio-rs/tracing) - replacement for `log` and `env_logger` with first-class async support
+
+**CLI**
+
+- [structopt](https://docs.rs/structopt/latest/structopt/) - CLI args from configuration
+- [clap](https://docs.rs/clap/latest/clap/) - CLI args from code
+
+**Async / Concurrency**
+
+- [tokio](https://docs.rs/tokio/latest/tokio/) - async runtime
+- [tokio-stream](https://docs.rs/tokio-stream/latest/tokio_stream/) - stream utils for tokio
+- [async-trait](https://docs.rs/async-trait/latest/async_trait/) - for making traits with async methods
+- [crossbeam](https://docs.rs/crossbeam/latest/crossbeam/) - bidirectional communication channels
+
+**Web**
+
+- [rocket](https://rocket.rs/) - HTTP server
+- [reqwest](https://github.com/seanmonstar/reqwest) - HTTP client
+- [hyper](https://github.com/hyperium/hyper) - fast and correct HTTP implementation
+
+**Foundation**
+
+- [rand](https://docs.rs/rand/latest/rand/) - random number generator and tools
+- [regex](https://docs.rs/regex/latest/regex/) - regular expressions
+- [base64](https://docs.rs/base64/latest/base64/) - Base64 implementation
+- [http](https://docs.rs/http/latest/http/) - library of common HTTP types
+
+**Misc & Tools**
+
+- [uuid](https://docs.rs/uuid/latest/uuid/) - uuid implementation
+- [itertools](https://docs.rs/itertools/latest/itertools/) - additional iterator tools and macros
+- [maplit](https://docs.rs/maplit/latest/maplit/) - `hashmap!{}` macro like `vec![]`
+- [cfg-if](https://docs.rs/cfg-if/latest/cfg_if/) - macros to simplify mutually exclusive conditional compilation `#[cfg]` attributes
+- [just](https://github.com/casey/just) - a better `make`
+
 ## More Learning
 
 - [Rust Book](https://doc.rust-lang.org/stable/book/)
+- [Rust Cheatsheet](https://cheats.rs/)
+- [Awesome Rust Resources](https://github.com/rust-unofficial/awesome-rust)
+- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
